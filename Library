@@ -1,0 +1,21 @@
+Project : Library Management System
+Title : SmartLib
+Target Audience : Librarien
+Budget : 10Lakhs
+Timeline:2weeks
+Feature : 
+          Register Page
+          Login Page
+          Add the  books
+          Add the Books in shelfwise or Categories
+          List the available books 
+          searching books
+          Show the unavailable books
+          update the books
+          //Identify users with ID card
+          Use the books certain time limit 
+          Rented books note the timelimit
+          Return the book certain time Limits
+          Fine amounts 
+          Repeated customer - discount for more days
+          Feedback
