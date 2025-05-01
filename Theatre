@@ -1,0 +1,24 @@
+Project: Theatre Ticket Booking System
+Title: SpotlightBookings
+Target Audience : Operators
+Type : B2B
+Timeline: 3weeks
+Budget : 15lakhs
+Feature :
+      Register Page
+      Login
+      Show nearby Theatre
+      //categories of movie genres
+      list the seat type(Luxury and normal)
+      Offers for snacks 
+      show time management
+      Online Payement for Ticket
+      Booking confirmation send via Mail or SMS
+      Cancellation and refund policy
+      Repeated Customers gives offers 
+      //change the seat no for available seats
+      Notification for online payment ticket offers
+      Notification of releasing new movies
+      //Notification which movie currently released in before 1 hour 
+      Notification on re-release movies 
+       
