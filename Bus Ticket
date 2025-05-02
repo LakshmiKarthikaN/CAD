@@ -1,0 +1,35 @@
+Project :  Bus Ticket Booking System
+Title :     Go Bus
+Target Audience : Users
+Type :B2C
+Budget : 10Lakhs
+TimeLine : 3weeks
+Feature : Storage Management
+          GPS tracking System
+          user details page 
+          show the starting point to end point to available bus
+          Repeated Customers discount or offers
+          select seat type
+          Show the bus starting time and reaching time 
+          Secure online payment System
+          Booking COnfirmation via email or SMS
+          GPS Bus tracking 
+          Send via SMS Driver details for users 
+          Ticket Cancellation and refund policy
+
+          
+          Register Page
+          Login Page
+          show the starting point to end point to available bus
+          select the available Bus
+          Available tickets show only booked tickets cannot accessible
+          select seat type(sleeper or Non-sleeper) 
+          Show the bus starting time and reaching time 
+          Secure online payment System
+          Booking COnfirmation via email or SMS
+          GPS Bus tracking 
+          Send via SMS Driver details for users 
+          Ticket Cancellation and refund policy
+          
+          
+          
