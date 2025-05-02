@@ -1,9 +1,19 @@
 Project : Library Management System
 Title : SmartLib
+Type : B2B
 Target Audience : Librarien
 Budget : 10Lakhs
-Timeline:2weeks
-Feature : 
+Timeline: 2weeks
+Feature : store the books in shelfwise or categories
+          store the user details
+          manage the available books
+          Repeated customer extend the days
+          send the Notification on new arrival books
+          Notified the users to cross the time limit
+          Notify their overdue amounts
+          add books
+          
+
           Register Page
           Login Page
           Add the  books
@@ -17,5 +27,5 @@ Feature :
           Rented books note the timelimit
           Return the book certain time Limits
           Fine amounts 
-          Repeated customer - discount for more days
+          //Repeated customer - discount for more days
           Feedback
