@@ -34,3 +34,52 @@ Feature :Manage user details
       //Notification which movie currently released in before 1 hour 
       Notification on re-release movies 
        
+User 
+    String userId;
+    String name;
+    String email;
+    String password;
+    String phone;
+    boolean isRepeatedCustomer;
+    String location;
+Theatre 
+    String theatreId;
+    String name;
+    String address;
+    double latitude;
+    double longitude;
+    List<Screen> screens;
+Movie 
+    String movieId;
+    String title;
+    String genre;
+    LocalDate releaseDate;
+    boolean isReRelease;
+Screen 
+    String screenId;
+    String name;
+    List<Show> shows;
+Show 
+    String showId;
+    Movie movie;
+    LocalDateTime startTime;
+    LocalDateTime endTime;
+    List<Seat> seats;
+Seat 
+    String seatNumber;
+    boolean isAvailable;
+    SeatType type;
+    enum SeatType { LUXURY, NORMAL }
+Booking 
+    String bookingId;
+    User user;
+    Show show;
+    List<Seat> seats;
+    Payment payment;
+    boolean isCancelled;
+Payment 
+    String paymentId;
+    double amount;
+    String method; // e.g., UPI, CARD
+    boolean isPaid;
+    boolean isRefunded;
