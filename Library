@@ -29,3 +29,40 @@ Feature : store the books in shelfwise or categories
           Fine amounts 
           //Repeated customer - discount for more days
           Feedback
+
+  User 
+    String userId;
+    String name;
+    String email;
+    String password;
+    String idCardNumber;
+    boolean isRepeatedCustomer;
+
+Admin 
+    String adminId;
+    String name;
+    String email;
+    String password;
+
+Book 
+    String bookId;
+    String title;
+    String author;
+    String category;
+    String shelfNumber;
+    boolean isAvailable;
+
+BookTransaction 
+    String transactionId;
+    User user;
+    Book book;
+    LocalDate rentDate;
+    LocalDate dueDate;
+    LocalDate returnDate;
+    double fine;
+    boolean isReturned;
+Feedback {
+    String feedbackId;
+    User user;
+    String message;
+    LocalDate date;
