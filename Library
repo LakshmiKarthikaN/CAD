@@ -37,7 +37,7 @@ Register Page
 Login
     String mailId;
     String Password;
-  User 
+  StorageStructure 
     String userId;
     String name;
     String email;
@@ -45,31 +45,33 @@ Login
     String idCardNumber;
     boolean isRepeatedCustomer;
 
-Admin 
-    String adminId;
-    String name;
-    String email;
-    String password;
-
 Book 
     String bookId;
     String title;
     String author;
     String category;
-    String shelfNumber;
+    int shelfNumber;
     boolean isAvailable;
-
-BookTransaction 
-    String transactionId;
+ BorrowedBooks
+    String bookId;
+    String title;
+ReturnedBooks
+   String BookId;
+   String title;
+SearchFilter{
+    String title;
+    String BookId;
+FineAmount
+    int transactionId;
     User user;
     Book book;
-    LocalDate rentDate;
-    LocalDate dueDate;
-    LocalDate returnDate;
+    Date rentDate;
+    Date dueDate;
     double fine;
+    Date returnDate;
     boolean isReturned;
-Feedback {
+Feedback 
     String feedbackId;
     User user;
     String message;
-    LocalDate date;
+    
