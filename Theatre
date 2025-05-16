@@ -33,8 +33,16 @@ Feature :Manage user details
       Notification of releasing new movies
       //Notification which movie currently released in before 1 hour 
       Notification on re-release movies 
-       
-User 
+
+Register
+    String TheatreId;
+    String mailId;
+    String password;
+    String confirmPassword;
+Login
+    String mailId;
+     String password;
+User
     String userId;
     String name;
     String email;
