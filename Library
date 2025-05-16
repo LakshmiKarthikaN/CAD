@@ -29,7 +29,14 @@ Feature : store the books in shelfwise or categories
           Fine amounts 
           //Repeated customer - discount for more days
           Feedback
-
+Register Page
+    String mailId;
+    String LibrarienId;
+    String Password;
+    String ConfirmPassword;
+Login
+    String mailId;
+    String Password;
   User 
     String userId;
     String name;
