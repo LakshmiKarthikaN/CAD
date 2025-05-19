@@ -124,4 +124,163 @@ END$$
 DELIMITER ;
 CALL populate_voters();
 select * from voter;
+mysql> WITH vote_counts AS (
+    ->     SELECT 
+    ->         c.constituency_id,
+    ->         c.candidate_id,
+    ->         p.party_name,
+    ->         COUNT(*) AS total_votes,
+    ->         RANK() OVER (PARTITION BY c.constituency_id ORDER BY COUNT(*) DESC) AS rank_pos
+    ->     FROM 
+    ->         voter v
+    ->     JOIN 
+    ->         candidate c ON v.voted_candidate_id = c.candidate_id
+    ->     JOIN 
+    ->         party p ON c.party_id = p.party_id
+    ->     GROUP BY 
+    ->         c.constituency_id, c.candidate_id
+    -> ),
+    -> winners AS (
+    ->     SELECT 
+    ->         constituency_id,
+    ->         party_name
+    ->     FROM 
+    ->         vote_counts
+    ->     WHERE 
+    ->         rank_pos = 1
+    -> )
+    -> SELECT 
+    ->     party_name AS cm_party,
+    ->     COUNT(*) AS constituencies_won
+    -> FROM 
+    ->     winners
+    -> GROUP BY 
+    ->     party_name
+    -> ORDER BY 
+    ->     constituencies_won DESC
+    -> LIMIT 1;
++----------+--------------------+
+| cm_party | constituencies_won |
++----------+--------------------+
+| NTK      |                  5 |
++----------+--------------------+
+1 row in set (0.01 sec)
+
+mysql> SELECT 
+    ->     p.party_name,
+    ->     COUNT(*) AS total_votes,
+    ->     ROUND(COUNT(*) * 100.0 / 10000, 2) AS vote_percentage
+    -> FROM 
+    ->     voter v
+    -> JOIN 
+    ->     candidate c ON v.voted_candidate_id = c.candidate_id
+    -> JOIN 
+    ->     party p ON c.party_id = p.party_id
+    -> GROUP BY 
+    ->     p.party_name
+    -> ORDER BY 
+    ->     total_votes DESC;
++------------+-------------+-----------------+
+| party_name | total_votes | vote_percentage |
++------------+-------------+-----------------+
+| NTK        |        2429 |           24.29 |
+| AIADMK     |        2346 |           23.46 |
+| BJP        |        1606 |           16.06 |
+| TMK        |        1573 |           15.73 |
+| INC        |        1439 |           14.39 |
+| MNM        |         607 |            6.07 |
++------------+-------------+-----------------+
+6 rows in set (0.00 sec)
+
+mysql> -- Get winner in each constituency
+mysql> SELECT 
+    ->     vc.constituency_id,
+    ->     vc.candidate_id,
+    ->     c.candidate_name,
+    ->     p.party_name,
+    ->     COUNT(*) AS total_votes
+    -> FROM 
+    ->     voter v
+    -> JOIN 
+    ->     candidate c ON v.voted_candidate_id = c.candidate_id
+    -> JOIN 
+    ->     party p ON c.party_id = p.party_id
+    -> JOIN 
+    ->     constituency con ON v.constituency_id = con.constituency_id
+    -> JOIN 
+    ->     voter vc ON vc.voted_candidate_id = c.candidate_id
+    -> GROUP BY 
+    ->     vc.constituency_id, vc.voted_candidate_id
+    -> HAVING 
+    ->     COUNT(*) = (
+    ->         SELECT 
+    ->             MAX(votecount) 
+    ->         FROM (
+    ->             SELECT 
+    ->                 v2.voted_candidate_id,
+    ->                 COUNT(*) AS votecount
+    ->             FROM 
+    ->                 voter v2
+    ->             JOIN 
+    ->                 candidate c2 ON v2.voted_candidate_id = c2.candidate_id
+    ->             WHERE 
+    ->                 c2.constituency_id = vc.constituency_id
+    ->             GROUP BY 
+    ->                 v2.voted_candidate_id
+    ->         ) AS max_votes_sub
+    ->     );
+ERROR 1054 (42S22): Unknown column 'vc.candidate_id' in 'field list'
+mysql> SELECT 
+    ->     c.constituency_id,
+    ->     con.constituency_name,
+    ->     c.candidate_id,
+    ->     c.candidate_name,
+    ->     p.party_name,
+    ->     COUNT(*) AS votes_received
+    -> FROM 
+    ->     voter v
+    -> JOIN 
+    ->     candidate c ON v.voted_candidate_id = c.candidate_id
+    -> JOIN 
+    ->     party p ON c.party_id = p.party_id
+    -> JOIN 
+    ->     constituency con ON c.constituency_id = con.constituency_id
+    -> GROUP BY 
+    ->     c.constituency_id, c.candidate_id
+    -> HAVING 
+    ->     votes_received = (
+    ->         SELECT 
+    ->             MAX(votecount)
+    ->         FROM (
+    ->             SELECT 
+    ->                 c2.constituency_id,
+    ->                 COUNT(*) AS votecount
+    ->             FROM 
+    ->                 voter v2
+    ->             JOIN 
+    ->                 candidate c2 ON v2.voted_candidate_id = c2.candidate_id
+    ->             WHERE 
+    ->                 c2.constituency_id = c.constituency_id
+    ->             GROUP BY 
+    ->                 v2.voted_candidate_id
+    ->         ) AS sub
+    ->     )
+    -> ORDER BY 
+    ->     c.constituency_id;
++-----------------+-------------------+--------------+----------------------+------------+----------------+
+| constituency_id | constituency_name | candidate_id | candidate_name       | party_name | votes_received |
++-----------------+-------------------+--------------+----------------------+------------+----------------+
+|               1 | Tirunelveli       |            5 | Sathya               | NTK        |            189 |
+|               2 | Sivaganga         |           11 | Ezhilarasi           | NTK        |            215 |
+|               3 | Nagercoil         |           13 | RadhaKrishnan        | BJP        |            260 |
+|               4 | Virudhunagar      |           19 | Radhika Sarathkumar  | BJP        |            279 |
+|               5 | Salem North       |           23 | G. Manoj Kumar       | NTK        |            253 |
+|               6 | Madurai Central   |           26 | L. Mahalakshmi       | NTK        |            260 |
+|               7 | Thanjavur         |           28 | R. Soundararajan     | AIADMK     |            262 |
+|               7 | Thanjavur         |           30 | M. E. Humayun Kabir  | NTK        |            262 |
+|               8 | Kancheepuram      |           32 | G.selvam             | TMK        |            209 |
+|               9 | Dindigul          |           38 | G. Kumari            | INC        |            336 |
+|              10 | Villupuram        |           43 | Bhagyaraj            | AIADMK     |            257 |
++-----------------+-------------------+--------------+----------------------+------------+----------------+
+11 rows in set (0.02 sec)
 
