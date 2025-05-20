@@ -120,47 +120,30 @@ END$$
 DELIMITER ;
 CALL populate_voters();
 select * from voter;
-mysql> WITH vote_counts AS (
-    ->     SELECT 
-    ->         c.constituency_id,
-    ->         c.candidate_id,
-    ->         p.party_name,
-    ->         COUNT(*) AS total_votes,
-    ->         RANK() OVER (PARTITION BY c.constituency_id ORDER BY COUNT(*) DESC) AS rank_pos
-    ->     FROM 
-    ->         voter v
-    ->     JOIN 
-    ->         candidate c ON v.voted_candidate_id = c.candidate_id
-    ->     JOIN 
-    ->         party p ON c.party_id = p.party_id
-    ->     GROUP BY 
-    ->         c.constituency_id, c.candidate_id
-    -> ),
-    -> winners AS (
-    ->     SELECT 
-    ->         constituency_id,
-    ->         party_name
-    ->     FROM 
-    ->         vote_counts
-    ->     WHERE 
-    ->         rank_pos = 1
+SELECT p.leader_name AS CM, p.party_name, COUNT(*) AS seats_won
+    -> FROM voter v
+    -> JOIN candidate c ON v.voted_candidate_id = c.candidate_id
+    -> JOIN party p ON c.party_id = p.party_id
+    -> WHERE (v.constituency_id, v.voted_candidate_id) IN (
+    ->     SELECT constituency_id, voted_candidate_id
+    ->     FROM (
+    ->         SELECT constituency_id, voted_candidate_id, 
+    ->                COUNT(*) AS vote_count,
+    ->                RANK() OVER (PARTITION BY constituency_id ORDER BY COUNT(*) DESC) AS rnk
+    ->         FROM voter
+    ->         GROUP BY constituency_id, voted_candidate_id
+    ->     ) AS ranked_votes
+    ->     WHERE rnk = 1
     -> )
-    -> SELECT 
-    ->     party_name AS cm_party,
-    ->     COUNT(*) AS constituencies_won
-    -> FROM 
-    ->     winners
-    -> GROUP BY 
-    ->     party_name
-    -> ORDER BY 
-    ->     constituencies_won DESC
+    -> GROUP BY p.party_id
+    -> ORDER BY seats_won DESC
     -> LIMIT 1;
-+----------+--------------------+
-| cm_party | constituencies_won |
-+----------+--------------------+
-| NTK      |                  5 |
-+----------+--------------------+
-1 row in set (0.01 sec)
++--------+------------+-----------+
+| CM     | party_name | seats_won |
++--------+------------+-----------+
+| Seeman | NTK        |      1179 |
++--------+------------+-----------+
+
 
 mysql> SELECT 
     ->     p.party_name,
@@ -187,45 +170,6 @@ mysql> SELECT
 | MNM        |         607 |            6.07 |
 +------------+-------------+-----------------+
 6 rows in set (0.00 sec)
-
-mysql> -- Get winner in each constituency
-mysql> SELECT 
-    ->     vc.constituency_id,
-    ->     vc.candidate_id,
-    ->     c.candidate_name,
-    ->     p.party_name,
-    ->     COUNT(*) AS total_votes
-    -> FROM 
-    ->     voter v
-    -> JOIN 
-    ->     candidate c ON v.voted_candidate_id = c.candidate_id
-    -> JOIN 
-    ->     party p ON c.party_id = p.party_id
-    -> JOIN 
-    ->     constituency con ON v.constituency_id = con.constituency_id
-    -> JOIN 
-    ->     voter vc ON vc.voted_candidate_id = c.candidate_id
-    -> GROUP BY 
-    ->     vc.constituency_id, vc.voted_candidate_id
-    -> HAVING 
-    ->     COUNT(*) = (
-    ->         SELECT 
-    ->             MAX(votecount) 
-    ->         FROM (
-    ->             SELECT 
-    ->                 v2.voted_candidate_id,
-    ->                 COUNT(*) AS votecount
-    ->             FROM 
-    ->                 voter v2
-    ->             JOIN 
-    ->                 candidate c2 ON v2.voted_candidate_id = c2.candidate_id
-    ->             WHERE 
-    ->                 c2.constituency_id = vc.constituency_id
-    ->             GROUP BY 
-    ->                 v2.voted_candidate_id
-    ->         ) AS max_votes_sub
-    ->     );
-ERROR 1054 (42S22): Unknown column 'vc.candidate_id' in 'field list'
 mysql> SELECT 
     ->     c.constituency_id,
     ->     con.constituency_name,
@@ -304,46 +248,5 @@ mysql> SELECT
 +------------+-------------+
 6 rows in set (0.00 sec)
 
-mysql> WITH vote_counts AS (
-    ->     SELECT 
-    ->         c.constituency_id,
-    ->         c.candidate_id,
-    ->         p.party_name,
-    ->         COUNT(*) AS total_votes,
-    ->         RANK() OVER (PARTITION BY c.constituency_id ORDER BY COUNT(*) DESC) AS rank_pos
-    ->     FROM 
-    ->         voter v
-    ->     JOIN 
-    ->         candidate c ON v.voted_candidate_id = c.candidate_id
-    ->     JOIN 
-    ->         party p ON c.party_id = p.party_id
-    ->     GROUP BY 
-    ->         c.constituency_id, c.candidate_id
-    -> ),
-    -> winners AS (
-    ->     SELECT 
-    ->         constituency_id,
-    ->         party_name
-    ->     FROM 
-    ->         vote_counts
-    ->     WHERE 
-    ->         rank_pos = 1
-    -> )
-    -> SELECT 
-    ->     party_name AS cm_party,
-    ->     COUNT(*) AS constituencies_won
-    -> FROM 
-    ->     winners
-    -> GROUP BY 
-    ->     party_name
-    -> ORDER BY 
-    ->     constituencies_won DESC
-    -> LIMIT 1;
-+----------+--------------------+
-| cm_party | constituencies_won |
-+----------+--------------------+
-| NTK      |                  5 |
-+----------+--------------------+
-1 row in set (0.00 sec)
 
 
