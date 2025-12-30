@@ -1,0 +1,118 @@
+CREATE DATABASE zerowait;
+-- Queue Management System Database Schema
+-- MySQL Database Design
+use zerowait;
+-- 1. Users Table (Both Patients and Admin)
+CREATE TABLE users (
+    user_id INT PRIMARY KEY AUTO_INCREMENT,
+    full_name VARCHAR(100) NOT NULL,
+    email VARCHAR(100) UNIQUE NOT NULL,
+    phone_number VARCHAR(15) NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    role ENUM('PATIENT', 'ADMIN', 'RECEPTIONIST') DEFAULT 'PATIENT',
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_email (email),
+    INDEX idx_phone (phone_number)
+);
+ALTER TABLE users
+DROP COLUMN blood_group;
+
+-- Add missing columns to users table
+ALTER TABLE users 
+ADD COLUMN date_of_birth DATE AFTER phone_number,
+ADD COLUMN age INT AFTER date_of_birth,
+ADD COLUMN gender ENUM('MALE', 'FEMALE', 'OTHER') AFTER age,
+ADD COLUMN address TEXT AFTER gender,
+ADD COLUMN blood_group VARCHAR(5) AFTER address;
+
+select * from users;
+-- 2. Queue Tokens Table (Main Queue Management)
+CREATE TABLE queue_tokens (
+    token_id INT PRIMARY KEY AUTO_INCREMENT,
+    token_number VARCHAR(20) UNIQUE NOT NULL,
+    patient_id INT NOT NULL,
+    check_in_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    status ENUM('WAITING', 'CALLED', 'SERVING', 'COMPLETED', 'CANCELLED') DEFAULT 'WAITING',
+    queue_date DATE NOT NULL,
+    estimated_wait_time INT DEFAULT 0, -- in minutes
+    actual_service_start_time TIMESTAMP NULL,
+    actual_service_end_time TIMESTAMP NULL,
+    notes TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (patient_id) REFERENCES users(user_id) ON DELETE CASCADE,
+    INDEX idx_token_number (token_number),
+    INDEX idx_status (status),
+    INDEX idx_queue_date (queue_date),
+    INDEX idx_patient_id (patient_id)
+);
+
+-- 3. Patient Location Table (For Distance Calculation)
+CREATE TABLE patient_locations (
+    location_id INT PRIMARY KEY AUTO_INCREMENT,
+    patient_id INT NOT NULL,
+    token_id INT NOT NULL,
+    latitude DECIMAL(10, 8) NOT NULL,
+    longitude DECIMAL(11, 8) NOT NULL,
+    address VARCHAR(255),
+    distance_km DECIMAL(6, 2), -- Distance from hospital
+    estimated_travel_time INT, -- in minutes
+    recorded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (patient_id) REFERENCES users(user_id) ON DELETE CASCADE,
+    FOREIGN KEY (token_id) REFERENCES queue_tokens(token_id) ON DELETE CASCADE,
+    INDEX idx_token_id (token_id)
+);
+
+-- 4. Hospital Configuration Table
+CREATE TABLE hospital_config (
+    config_id INT PRIMARY KEY AUTO_INCREMENT,
+    hospital_name VARCHAR(150) NOT NULL,
+    latitude DECIMAL(10, 8) NOT NULL,
+    longitude DECIMAL(11, 8) NOT NULL,
+    address TEXT NOT NULL,
+    phone_number VARCHAR(15),
+    email VARCHAR(100),
+    average_service_time INT DEFAULT 15, -- minutes per patient
+    max_tokens_per_day INT DEFAULT 100,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- 5. Notifications Table (SMS/Message Log)
+CREATE TABLE notifications (
+    notification_id INT PRIMARY KEY AUTO_INCREMENT,
+    token_id INT NOT NULL,
+    patient_id INT NOT NULL,
+    message_type ENUM('TOKEN_GENERATED', 'APPROACHING', 'READY_TO_SERVE', 'REMINDER') NOT NULL,
+    message_content TEXT NOT NULL,
+    sent_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    delivery_status ENUM('PENDING', 'SENT', 'FAILED') DEFAULT 'PENDING',
+    FOREIGN KEY (token_id) REFERENCES queue_tokens(token_id) ON DELETE CASCADE,
+    FOREIGN KEY (patient_id) REFERENCES users(user_id) ON DELETE CASCADE,
+    INDEX idx_token_id (token_id)
+);
+
+-- 6. System Logs Table (Audit Trail)
+CREATE TABLE system_logs (
+    log_id INT PRIMARY KEY AUTO_INCREMENT,
+    user_id INT,
+    action VARCHAR(100) NOT NULL,
+    description TEXT,
+    ip_address VARCHAR(45),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE SET NULL,
+    INDEX idx_user_id (user_id),
+    INDEX idx_created_at (created_at)
+);
+
+-- Insert Default Admin User (Password: admin123 - hashed)
+INSERT INTO users (full_name, email, phone_number, password_hash, role) 
+VALUES ('Admin User', 'admin@hospital.com', '1234567890', 
+        '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'ADMIN');
+
+-- Insert Hospital Configuration
+INSERT INTO hospital_config (hospital_name, latitude, longitude, address, phone_number, email)
+VALUES ('City General Hospital', 37.7749, -122.4194, '123 Main Street, City, State', '555-0100', 'info@hospital.com');

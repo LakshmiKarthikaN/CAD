@@ -1,0 +1,77 @@
+Project : Library Management System
+Title : SmartLib
+Type : B2B
+Target Audience : Librarien
+Budget : 10Lakhs
+Timeline: 2weeks
+Feature : store the books in shelfwise or categories
+          store the user details
+          manage the available books
+          Repeated customer extend the days
+          send the Notification on new arrival books
+          Notified the users to cross the time limit
+          Notify their overdue amounts
+          add books
+          
+
+          Register Page
+          Login Page
+          Add the  books
+          Add the Books in shelfwise or Categories
+          List the available books 
+          searching books
+          Show the unavailable books
+          update the books
+          //Identify users with ID card
+          Use the books certain time limit 
+          Rented books note the timelimit
+          Return the book certain time Limits
+          Fine amounts 
+          //Repeated customer - discount for more days
+          Feedback
+Register Page
+    String mailId;
+    String LibrarienId;
+    String Password;
+    String ConfirmPassword;
+Login
+    String mailId;
+    String Password;
+  StorageStructure 
+    String userId;
+    String name;
+    String email;
+    String password;
+    String idCardNumber;
+    boolean isRepeatedCustomer;
+
+Book 
+    String bookId;
+    String title;
+    String author;
+    String category;
+    int shelfNumber;
+    boolean isAvailable;
+ BorrowedBooks
+    String bookId;
+    String title;
+ReturnedBooks
+   String BookId;
+   String title;
+SearchFilter{
+    String title;
+    String BookId;
+FineAmount
+    int transactionId;
+    User user;
+    Book book;
+    Date rentDate;
+    Date dueDate;
+    double fine;
+    Date returnDate;
+    boolean isReturned;
+Feedback 
+    String feedbackId;
+    User user;
+    String message;
+    

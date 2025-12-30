@@ -1,0 +1,88 @@
+Project :  Bus Ticket Booking System
+Title :     Go Bus
+Target Audience : Users
+Type :B2C
+Budget : 10Lakhs
+TimeLine : 3weeks
+Feature : Storage Management
+          GPS tracking System
+          user details page 
+          show the starting point to end point to available bus
+          Repeated Customers discount or offers
+          select seat type
+          Show the bus starting time and reaching time 
+          Secure online payment System
+          Booking COnfirmation via email or SMS
+          GPS Bus tracking 
+          Send via SMS Driver details for users 
+          Ticket Cancellation and refund policy
+
+          
+          Register Page
+          Login Page
+          show the starting point to end point to available bus
+          select the available Bus
+          Available tickets show only booked tickets cannot accessible
+          select seat type(sleeper or Non-sleeper) 
+          Show the bus starting time and reaching time 
+          Secure online payment System
+          Booking COnfirmation via email or SMS
+          GPS Bus tracking 
+          Send via SMS Driver details for users 
+          Ticket Cancellation and refund policy
+
+    User:
+    String userId;
+    String name;
+    String email;
+    String phone;
+    String password;
+    boolean isRepeatedCustomer;
+Admin:
+     String adminId;
+    String name;
+    String email;
+    String password;
+  Route
+    String routeId;
+    String startPoint;
+    String endPoint;
+    List<String> stopPoints;
+    double distance;
+BusDetails:
+    String busId;
+    String busName;
+    Route route;
+    List<Seat> seats;
+    Driver driver;
+    String startTime;
+    String endTime;
+    GPS gps;
+Seat Type
+    ss Seat {
+    String seatNumber;
+    boolean isBooked;
+    SeatType type; // enum: SLEEPER, NON_SLEEPER
+    enum SeatType { SLEEPER, NON_SLEEPER }
+  DriverDeatils
+    String driverId;
+    String name;
+    String phone;
+Ticket 
+    String ticketId;
+    User user;
+    Bus bus;
+    Seat seat;
+    double price;
+    boolean isCancelled;
+Booking 
+    String bookingId;
+    User user;
+    List<Ticket> tickets;
+    Payment payment;
+Payment {
+    String paymentId;
+    double amount;
+    String method; // e.g., UPI, Card
+    boolean isPaid;
+    boolean isRefunded;

@@ -1,0 +1,252 @@
+show databases;
+CREATE DATABASE ELECTION;
+USE ELECTION;
+CREATE TABLE party(
+     party_id INT PRIMARY KEY AUTO_INCREMENT,
+     party_name VARCHAR(200),
+     symbol VARCHAR(100),
+     leader_name VARCHAR(100)
+);
+INSERT INTO party (party_name, symbol, leader_name) VALUES
+ ('AIADMK', 'Two Leaves', 'Edapadi Palanisamy'),
+ ('TMK', 'Rising Sun', 'Stalin'),
+ ('NTK', 'Farmer','Seeman'),
+ ('BJP', 'Lotus','Narendra Modi'),
+ ('INC', 'Hand','Rahul Gandhi'),
+ ('MNM', 'Torch','Kamal');
+ select * from party;
+ INSERT INTO party VALUES (7,'AAP','Broom','Aravind Kejriwal');
+ DELETE FROM party where party_id=7;
+ CREATE TABLE constituency(
+     constituency_id INT PRIMARY KEY AUTO_INCREMENT,
+     constituency_name VARCHAR(100)
+     );
+ INSERT INTO constituency (constituency_name) VALUES
+     ('Tirunelveli'),
+('Sivaganga'), ('Nagercoil'), ('Virudhunagar'),('Salem North'), ('Madurai Central'), ('Thanjavur'),	('Kancheepuram'),
+('Dindigul'),('Villupuram');	
+select * from constituency;		
+CREATE TABLE candidate(
+     candidate_id INT PRIMARY KEY,
+     candidate_name VARCHAR(100),
+     party_id INT,
+     constituency_id INT,
+     foreign key (party_id) references party(party_id),
+     FOREIGN KEY (constituency_id) REFERENCES constituency(constituency_id)
+     );
+select * from candidate;
+INSERT INTO candidate  VALUES
+(1,'Nainar Nagenthran',4,1),
+(2,' Jansi Rani',1,1),
+(3,'Abdul Wahab',2,1),
+(4,' Ruby R Manoharan',5,1),
+(5,'Sathya',3,1),
+(6,'Vennimalai',6,1);
+INSERT INTO candidate VALUES
+(7,'Dhevanathan Yadav T	',4,2),
+(8,'Xavierdass A',1,2),
+(9,'Thillaivasagam M',2,2),
+(10,'Karti P. Chidambaram',5,2),
+(11,'Ezhilarasi',3,2),
+(12,'Vijaya Kumar',5,3),
+(13,'RadhaKrishnan',4,3),
+(14,'Mariya jenifer klara mickel',3,3),
+(15,'Nasarath',1,3),
+(16, ' Manickam Tagore ', 5, 4),
+(17, 'Raja Rathinam', 1, 4),
+(18, 'S. Kaushik', 3, 4),
+(19, 'Radhika Sarathkumar ', 4, 4),
+(20, 'C. Narayanan', 1, 5),
+(21, 'V. Ramani', 2, 5),
+(22, 'A. Sharmila', 6, 5),
+(23, 'G. Manoj Kumar', 3, 5),
+(24, 'K. Moorthy', 2, 6),
+(25, 'S. Pradeep', 4, 6),
+(26, 'L. Mahalakshmi', 3, 6),
+(27,'Saravanan P',1,6),
+(28, 'R. Soundararajan', 1, 7),
+(29, 'S. Murasoli', 2, 7),
+(30, 'M. E. Humayun Kabir', 3, 7),
+(31,'M.Muruganandham',4,7),
+(32, 'G.selvam', 2, 8),
+(33, 'P. Vinod', 5, 8),
+(34, 'S. Anbu', 6, 8),
+(35, 'Rajasekar', 1, 8),
+(36, 'Santhosh Kumar', 3, 8),
+(37, 'Mohamed Mubarak M. A.', 1, 9),
+(38, 'G. Kumari', 5, 9),
+(39, 'D. Kailai Rajan', 3, 9),
+(40, 'T. Meena', 2, 10),
+(41, 'A. Rajendran', 4, 10),
+(42, 'Kalanchiyam M.', 3, 10),
+(43,'Bhagyaraj',1,10);
+CREATE TABLE voter (
+    voter_id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100),
+    age INT CHECK (age >= 18),
+    constituency_id INT,
+    voted_candidate_id INT,
+    FOREIGN KEY (constituency_id) REFERENCES constituency(constituency_id),
+    FOREIGN KEY (voted_candidate_id) REFERENCES candidate(candidate_id)
+);
+DELIMITER $$
+
+CREATE PROCEDURE populate_voters()
+BEGIN
+    DECLARE i INT DEFAULT 1;
+    DECLARE c_id INT;
+    DECLARE cand_id INT;
+
+    WHILE i <= 10000 DO
+      
+        SET c_id = FLOOR(1 + RAND() * 10);
+        SELECT candidate_id INTO cand_id
+        FROM candidate
+        WHERE constituency_id = c_id
+        ORDER BY RAND()
+        LIMIT 1;
+        INSERT INTO voter (name, age, constituency_id, voted_candidate_id)
+        VALUES (
+            CONCAT('Voter_', i),
+            FLOOR(18 + (RAND() * 62)),  
+            c_id,
+            cand_id
+        );
+
+        SET i = i + 1;
+    END WHILE;
+END$$
+
+DELIMITER ;
+CALL populate_voters();
+select * from voter;
+SELECT p.leader_name AS CM, p.party_name, COUNT(*) AS seats_won
+    -> FROM voter v
+    -> JOIN candidate c ON v.voted_candidate_id = c.candidate_id
+    -> JOIN party p ON c.party_id = p.party_id
+    -> WHERE (v.constituency_id, v.voted_candidate_id) IN (
+    ->     SELECT constituency_id, voted_candidate_id
+    ->     FROM (
+    ->         SELECT constituency_id, voted_candidate_id, 
+    ->                COUNT(*) AS vote_count,
+    ->                RANK() OVER (PARTITION BY constituency_id ORDER BY COUNT(*) DESC) AS rnk
+    ->         FROM voter
+    ->         GROUP BY constituency_id, voted_candidate_id
+    ->     ) AS ranked_votes
+    ->     WHERE rnk = 1
+    -> )
+    -> GROUP BY p.party_id
+    -> ORDER BY seats_won DESC
+    -> LIMIT 1;
++--------+------------+-----------+
+| CM     | party_name | seats_won |
++--------+------------+-----------+
+| Seeman | NTK        |      1179 |
++--------+------------+-----------+
+
+
+mysql> SELECT 
+    ->     p.party_name,
+    ->     COUNT(*) AS total_votes,
+    ->     ROUND(COUNT(*) * 100.0 / 10000, 2) AS vote_percentage
+    -> FROM 
+    ->     voter v
+    -> JOIN 
+    ->     candidate c ON v.voted_candidate_id = c.candidate_id
+    -> JOIN 
+    ->     party p ON c.party_id = p.party_id
+    -> GROUP BY 
+    ->     p.party_name
+    -> ORDER BY 
+    ->     total_votes DESC;
++------------+-------------+-----------------+
+| party_name | total_votes | vote_percentage |
++------------+-------------+-----------------+
+| NTK        |        2429 |           24.29 |
+| AIADMK     |        2346 |           23.46 |
+| BJP        |        1606 |           16.06 |
+| TMK        |        1573 |           15.73 |
+| INC        |        1439 |           14.39 |
+| MNM        |         607 |            6.07 |
++------------+-------------+-----------------+
+6 rows in set (0.00 sec)
+mysql> SELECT 
+    ->     c.constituency_id,
+    ->     con.constituency_name,
+    ->     c.candidate_id,
+    ->     c.candidate_name,
+    ->     p.party_name,
+    ->     COUNT(*) AS votes_received
+    -> FROM 
+    ->     voter v
+    -> JOIN 
+    ->     candidate c ON v.voted_candidate_id = c.candidate_id
+    -> JOIN 
+    ->     party p ON c.party_id = p.party_id
+    -> JOIN 
+    ->     constituency con ON c.constituency_id = con.constituency_id
+    -> GROUP BY 
+    ->     c.constituency_id, c.candidate_id
+    -> HAVING 
+    ->     votes_received = (
+    ->         SELECT 
+    ->             MAX(votecount)
+    ->         FROM (
+    ->             SELECT 
+    ->                 c2.constituency_id,
+    ->                 COUNT(*) AS votecount
+    ->             FROM 
+    ->                 voter v2
+    ->             JOIN 
+    ->                 candidate c2 ON v2.voted_candidate_id = c2.candidate_id
+    ->             WHERE 
+    ->                 c2.constituency_id = c.constituency_id
+    ->             GROUP BY 
+    ->                 v2.voted_candidate_id
+    ->         ) AS sub
+    ->     )
+    -> ORDER BY 
+    ->     c.constituency_id;
++-----------------+-------------------+--------------+----------------------+------------+----------------+
+| constituency_id | constituency_name | candidate_id | candidate_name       | party_name | votes_received |
++-----------------+-------------------+--------------+----------------------+------------+----------------+
+|               1 | Tirunelveli       |            5 | Sathya               | NTK        |            189 |
+|               2 | Sivaganga         |           11 | Ezhilarasi           | NTK        |            215 |
+|               3 | Nagercoil         |           13 | RadhaKrishnan        | BJP        |            260 |
+|               4 | Virudhunagar      |           19 | Radhika Sarathkumar  | BJP        |            279 |
+|               5 | Salem North       |           23 | G. Manoj Kumar       | NTK        |            253 |
+|               6 | Madurai Central   |           26 | L. Mahalakshmi       | NTK        |            260 |
+|               7 | Thanjavur         |           28 | R. Soundararajan     | AIADMK     |            262 |
+|               7 | Thanjavur         |           30 | M. E. Humayun Kabir  | NTK        |            262 |
+|               8 | Kancheepuram      |           32 | G.selvam             | TMK        |            209 |
+|               9 | Dindigul          |           38 | G. Kumari            | INC        |            336 |
+|              10 | Villupuram        |           43 | Bhagyaraj            | AIADMK     |            257 |
++-----------------+-------------------+--------------+----------------------+------------+----------------+
+11 rows in set (0.02 sec)
+ SELECT 
+    ->     p.party_name,
+    ->     COUNT(*) AS total_votes
+    -> FROM 
+    ->     voter v
+    -> JOIN 
+    ->     candidate c ON v.voted_candidate_id = c.candidate_id
+    -> JOIN 
+    ->     party p ON c.party_id = p.party_id
+    -> GROUP BY 
+    ->     p.party_name
+    -> ORDER BY 
+    ->     total_votes DESC;
++------------+-------------+
+| party_name | total_votes |
++------------+-------------+
+| NTK        |        2429 |
+| AIADMK     |        2346 |
+| BJP        |        1606 |
+| TMK        |        1573 |
+| INC        |        1439 |
+| MNM        |         607 |
++------------+-------------+
+6 rows in set (0.00 sec)
+
+
+
